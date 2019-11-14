@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Connect example</title>
+
+<style type="text/css">
+*{
+    box-sizing: border-box;
+}
+html {
+    overflow: hidden;
+}
+
+body {
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    background: gray;
+    padding: 10px;
+}
+
+.main{
+    background: #fff;
+    height: 100%;
+    min-height: 100vh;
+}
+
+.mark{
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background: #1cce1c;
+}
+
+</style>
+</head>
+<body>
+    <div class="main" id="main">
+
+    </div>
+    <script type="text/javascript">
+        
+        var conn;
+        window.onload = function () {
+
+            var main = document.getElementById('main');
+
+            let mouseDown = false;
+            main.addEventListener('mousedown', (e) => {
+                mouseDown = true;
+                mark(e.clientX, e.clientY, main);
+            });
+
+            main.addEventListener('mouseup', (e) => {
+                mouseDown = false;
+            });
+
+            main.addEventListener('mousemove', (e) => {
+                if (mouseDown) {
+                    mark(e.clientX, e.clientY, main);
+                }
+            });
+        
+            if (window["WebSocket"]) {
+                let room = Math.round(Math.random() * 1000);
+                room = 3434;
+                conn = new WebSocket("ws://" + document.location.host + "/ws?room="+room);
+                conn.onclose = function (evt) {
+                    var item = document.createElement("div");
+                    item.innerHTML = "<b>Connection closed.</b>";
+                    appendLog(item);
+                };
+                conn.onmessage = function (evt) {
+                    console.log(evt);
+                    let location = JSON.parse(evt.data);
+                    mark(location.x, location.y, main, false, true);
+                };
+            } else {
+                var item = document.createElement("div");
+                item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+                appendLog(item);
+            }
+        };
+
+        function mark(x, y, div, echo = true, color = null) {
+            let mark = document.createElement('div');
+            mark.className = "mark";
+            mark.style.top = y + 'px';
+            mark.style.left = x + 'px'; 
+            if (color) {
+                mark.style.background = 'blue';
+            }
+            div.append(mark);
+            if (!conn) {
+                    return false;
+            }
+            if (echo) {
+                conn.send(JSON.stringify({x: x, y: y}));
+            }
+        }
+        </script>
+</body>
+</html>
